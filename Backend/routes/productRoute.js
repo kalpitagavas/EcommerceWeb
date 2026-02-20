@@ -1,12 +1,14 @@
-const express=require("express");
+const express = require("express");
 const { getAllProduct, newproduct, singleProduct, updateProduct, deleteProduct } = require("../controller/productController");
-const router=express.Router();
+const { protect, admin } = require("../auth/authMiddleware"); // Add these!
+const router = express.Router();
 
+router.get("/", getAllProduct);
+router.get('/:id', singleProduct);
 
-router.get("/",getAllProduct);
-router.post('/',newproduct);
-router.get('/:id',singleProduct);
-router.put('/:id',updateProduct);
-router.delete('/:id',deleteProduct);
+// Restricted to Admin only
+router.post('/', protect, admin, newproduct);
+router.put('/:id', protect, admin, updateProduct);
+router.delete('/:id', protect, admin, deleteProduct);
 
-module.exports=router
+module.exports = router;

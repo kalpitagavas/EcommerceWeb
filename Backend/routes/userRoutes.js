@@ -1,12 +1,18 @@
-const express=require("express");
-const { login,getAllUser, register, getSingleUser, deleteUser, updateUser } = require("../controller/userController");
-const router=express.Router()
+const express = require("express");
+const { login, getAllUser, register, getSingleUser, deleteUser, updateUser } = require("../controller/userController");
+const { protect, admin } = require("../auth/authMiddleware");
+const router = express.Router();
 
-router.post("/register",register);
-router.post('/login',login);
-router.get("/",getAllUser);
-router.get("/:id",getSingleUser);
-router.delete("/:id",deleteUser);
-router.put("/:id",updateUser);
+// Public
+router.post("/register", register);
+router.post('/login', login);
 
-module.exports=router
+// Authenticated Users (Self-management)
+router.get("/:id", protect, getSingleUser);
+router.put("/:id", protect, updateUser); 
+
+// Admin Only (Management)
+router.get("/", protect, admin, getAllUser);
+router.delete("/:id", protect, admin, deleteUser);
+
+module.exports = router;

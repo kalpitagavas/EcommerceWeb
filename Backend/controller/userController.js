@@ -3,21 +3,33 @@ const User=require("../model/userModel")
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 //create new user
-const register=async(req,res)=>{
-    try{
-      const newUser=await User.create(req.body);
-      if(!newUser) return res.status(401).json({success:false,data:'User already exists'})
-        res.status(201).json({success:true,data:newUser})
-    }
-    catch(err){
-       res.status(500).json({success:false,error:err.message})
+const register = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        // 1. Check if user already exists FIRST
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ success: false, message: 'User already exists' });
+        }
+
+        // 2. NOW create the user
+        const newUser = await User.create(req.body);
+        
+        // Remove password from the response for security
+        newUser.password = undefined;
+
+        res.status(201).json({ success: true, data: newUser });
+    } catch (err) {
+        // If it still hits 500, it's a real server issue
+        res.status(500).json({ success: false, error: err.message });
     }
 }
 //get all users
 const getAllUser=async(req,res)=>{
-    const{name,email}=req.body
+  //  const{name,email}=req.body
     try{
-     const user=await User.find().select({name,email});
+     const user=await User.find().select('name email role');
      res.status(200).json({data:user})
     }
     catch(err){
@@ -68,6 +80,8 @@ const updateUser = async (req, res) => {
 
 const login = async (req, res) => {
     // 1. Get BOTH email and password from the body
+
+    console.log("Body received:", req.body);
     const { email, password } = req.body; 
 
     try {
@@ -98,8 +112,10 @@ const login = async (req, res) => {
         res.status(200).json({ 
             success: true, 
             message: "Login successful", 
-            userId: user._id ,
-             token:token
+             userId: user._id ,
+             token:token,email:email,
+             name: user.name,
+             role: user.role
         });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
